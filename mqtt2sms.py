@@ -17,10 +17,13 @@ __author__ = "Dennis Sell"
 __copyright__ = "Copyright (C) Dennis Sell"
 
 
+import sys
 import subprocess
 import mosquitto
 import os, tempfile
 import time
+import signal
+
 from googlevoice import Voice
 from config import Config
 
@@ -127,6 +130,10 @@ mqttc.on_connect = on_connect
 mqttc.on_message = on_message
 
 voicec = Voice()
+
+#trap kill signals including control-c
+signal.signal(signal.SIGTERM, cleanup)
+signal.signal(signal.SIGINT, cleanup)
 
 def main_loop():
 	global mqtt_connected
