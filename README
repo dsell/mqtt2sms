@@ -5,7 +5,7 @@ sudo apt-add-repository ppa:mosquitto-dev/mosquitto-ppa
 sudo apt-get update
 sudo apt-get install python-mosquitto
 cp .mqtt2sms.conf ~/
-googlevoice  ... manual install
+#	googlevoice  ... manual install
 wget https://pygooglevoice.googlecode.com/files/pygooglevoice-0.5.tar.gz
 cd pygooglevoice-0.5
 sudo python ./setup.py install

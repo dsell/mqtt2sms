@@ -23,6 +23,7 @@ import mosquitto
 import os, tempfile
 import time
 import signal
+import commands
 
 from googlevoice import Voice
 from config import Config
@@ -51,8 +52,11 @@ def on_connect( self, obj, rc):
 	global mqtt_connected
 	mqtt_connected = True
 	print "MQTT Connected"
-	mqttc.publish ( CLIENT_TOPIC + "status" , "connected", 1, 1 )
+	mqttc.publish ( CLIENT_TOPIC + "status" , "online", 1, 1 )
 	mqttc.publish( CLIENT_TOPIC + "version", CLIENT_VERSION, 1, 1 )
+	ip = commands.getoutput("/sbin/ifconfig").split("\n")[1].split()[1][5:]
+	mqttc.publish( CLIENT_TOPIC + "ip", ip, 1, 1 )
+	mqttc.publish( CLIENT_TOPIC + "pid", os.getpid(), 1, 1 )
 	mqttc.subscribe( CLIENT_TOPIC + "message", 2 )
 	mqttc.subscribe( CLIENT_TOPIC + "ping", 2)
 
@@ -79,7 +83,7 @@ def mqtt_connect():
 	rc = 1
 	while ( rc ):
 		print "Attempting connection..."
-		mqttc.will_set( CLIENT_TOPIC + "status", "disconnected_", 1, 1)
+		mqttc.will_set( CLIENT_TOPIC + "status", "disconnected", 1, 1)
 
 		#define the mqtt callbacks
 		mqttc.on_message = on_message
@@ -89,7 +93,6 @@ def mqtt_connect():
 		#connect
 		rc = mqttc.connect( MQTT_HOST, MQTT_PORT, MQTT_TIMEOUT )
 		if rc != 0:
-			logging.info( "Connection failed with error code $s, Retrying", rc )
 			print "Connection failed with error code ", rc, ", Retrying in 30 seconds."
 			time.sleep(30)
 		else:
@@ -101,6 +104,7 @@ def mqtt_disconnect():
 	if ( mqtt_connected ):
 		mqtt_connected = False 
 		print "MQTT Disconnected"
+		mqttc.publish ( "/clients/" + CLIENT_NAME + "/status" , "offline", 1, 1 )
 	mqttc.disconnect()
 
 
@@ -120,8 +124,7 @@ def do_disconnect():
        mqtt_connected = False
        print "MQTT Disconnected"
 
-
-#create a broker client
+#create an mqtt client
 mqttc = mosquitto.Mosquitto( CLIENT_NAME )
 
 
